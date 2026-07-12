@@ -78,6 +78,17 @@ test('signup and login support the financial analyst role', async () => {
   assert.ok(loginResult.token);
 });
 
+test('signup normalizes display role labels for enrolled users', async () => {
+  const signupResult = await signupUser({
+    name: 'Efe',
+    email: 'efe@example.com',
+    password: 'Password123!',
+    role: 'Fleet Manager'
+  });
+
+  assert.equal(signupResult.user.role, 'fleet_manager');
+});
+
 test('authenticateJWT attaches the user role and authorizeRoles blocks unauthorized access', () => {
   const user = {
     id: 'u-1',

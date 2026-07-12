@@ -8,8 +8,8 @@ import { useAuth } from '../../contexts/AuthContext';
 import { ROUTES } from '../../routes/routeConstants';
 
 const LoginPage = () => {
-  const [email, setEmail] = useState('fleet.manager@transitops.com');
-  const [password, setPassword] = useState('password123');
+  const [username, setUsername] = useState('admin');
+  const [password, setPassword] = useState('Admin@1234');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const { login } = useAuth();
@@ -21,8 +21,8 @@ const LoginPage = () => {
     setError('');
 
     try {
-      await login({ email, password });
-      navigate(ROUTES.dashboard);
+      const user = await login({ username, password });
+      navigate(user.role === 'fleet_manager' ? ROUTES.admin : ROUTES.dashboard);
     } catch (err) {
       setError(err.message || 'Unable to sign in');
     } finally {
@@ -39,7 +39,7 @@ const LoginPage = () => {
       <Form title="Welcome back">
         <p className="-mt-2 text-sm text-slate-500">Sign in to access your transport operations workspace.</p>
         <form onSubmit={handleSubmit} className="space-y-4">
-          <Input label="Email" type="email" value={email} onChange={(event) => setEmail(event.target.value)} placeholder="ops@transitops.com" />
+          <Input label="Username or Email" type="text" value={username} onChange={(event) => setUsername(event.target.value)} placeholder="admin or ops@transitops.com" />
           <Input label="Password" type="password" value={password} onChange={(event) => setPassword(event.target.value)} placeholder="••••••••" />
           {error ? <p className="text-sm text-rose-600">{error}</p> : null}
           <Button type="submit" className="w-full" disabled={loading}>

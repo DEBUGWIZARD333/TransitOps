@@ -1,0 +1,979 @@
+From 7ba39b05b76e157722ce7abae820e101d4016a13 Mon Sep 17 00:00:00 2001
+From: Arunesh <arun2k07@gmail.com>
+Date: Sun, 12 Jul 2026 12:16:07 +0530
+Subject: [PATCH] initial commit
+
+---
+ Backend/server.js                             |   8 +-
+ Backend/src/routes/apiRoutes.js               |  42 ++++
+ Backend/src/routes/healthRoutes.js            |   8 +
+ Frontend/vite-project/package-lock.json       |  86 +++++---
+ Frontend/vite-project/package.json            |   3 +-
+ Frontend/vite-project/src/App.css             | 185 +---------------
+ Frontend/vite-project/src/App.jsx             | 124 +----------
+ Frontend/vite-project/src/index.css           | 208 ++++++++++--------
+ Frontend/vite-project/src/main.jsx            |   5 +-
+ Frontend/vite-project/src/pages/Dashboard.jsx |  20 ++
+ Frontend/vite-project/src/pages/Login.jsx     | 107 +++++++++
+ 11 files changed, 378 insertions(+), 418 deletions(-)
+ create mode 100644 Backend/src/routes/apiRoutes.js
+ create mode 100644 Backend/src/routes/healthRoutes.js
+ create mode 100644 Frontend/vite-project/src/pages/Dashboard.jsx
+ create mode 100644 Frontend/vite-project/src/pages/Login.jsx
+
+diff --git a/Backend/server.js b/Backend/server.js
+index f5fca69..4b45418 100644
+--- a/Backend/server.js
++++ b/Backend/server.js
+@@ -2,6 +2,9 @@ const express = require('express');
+ const cors = require('cors');
+ require('dotenv').config();
+ 
++const healthRoutes = require('./src/routes/healthRoutes');
++const apiRoutes = require('./src/routes/apiRoutes');
++
+ const app = express();
+ const port = process.env.PORT || 5000;
+ 
+@@ -12,9 +15,8 @@ app.get('/', (req, res) => {
+   res.json({ message: 'TransitOps backend is running' });
+ });
+ 
+-app.get('/health', (req, res) => {
+-  res.json({ status: 'ok' });
+-});
++app.use(healthRoutes);
++app.use('/api', apiRoutes);
+ 
+ app.listen(port, () => {
+   console.log(`Server running on port ${port}`);
+diff --git a/Backend/src/routes/apiRoutes.js b/Backend/src/routes/apiRoutes.js
+new file mode 100644
+index 0000000..534f343
+--- /dev/null
++++ b/Backend/src/routes/apiRoutes.js
+@@ -0,0 +1,42 @@
++const express = require('express');
++const router = express.Router();
++
++// Mock database for users
++const users = [];
++
++router.get('/status', (req, res) => {
++  res.json({ message: 'API is live', app: 'TransitOps' });
++});
++
++router.post('/signup', (req, res) => {
++  const { email, password, role } = req.body;
++  if (!email || !password || !role) {
++    return res.status(401).json({ message: 'Email, password, and role are required' });
++  }
++  
++  const existingUser = users.find(u => u.email === email);
++  if (existingUser) {
++    return res.status(401).json({ message: 'User already exists' });
++  }
++
++  const newUser = { email, password, role };
++  users.push(newUser);
++  return res.status(200).json({ message: 'Registered successfully', user: { email: newUser.email, role: newUser.role } });
++});
++
++router.post('/login', (req, res) => {
++  const { email, password, role } = req.body;
++  if (!email || !password || !role) {
++    return res.status(401).json({ message: 'Email, password, and role are required' });
++  }
++
++  const user = users.find(u => u.email === email && u.password === password && u.role === role);
++  
++  if (user) {
++    return res.status(200).json({ message: 'Login successful', user: { email: user.email, role: user.role } });
++  } else {
++    return res.status(401).json({ message: 'Invalid credentials or role' });
++  }
++});
++
++module.exports = router;
+diff --git a/Backend/src/routes/healthRoutes.js b/Backend/src/routes/healthRoutes.js
+new file mode 100644
+index 0000000..d7567ea
+--- /dev/null
++++ b/Backend/src/routes/healthRoutes.js
+@@ -0,0 +1,8 @@
++const express = require('express');
++const router = express.Router();
++
++router.get('/health', (req, res) => {
++  res.json({ status: 'ok', service: 'TransitOps Backend' });
++});
++
++module.exports = router;
+diff --git a/Frontend/vite-project/package-lock.json b/Frontend/vite-project/package-lock.json
+index 76b9042..3786319 100644
+--- a/Frontend/vite-project/package-lock.json
++++ b/Frontend/vite-project/package-lock.json
+@@ -9,7 +9,8 @@
+       "version": "0.0.0",
+       "dependencies": {
+         "react": "^19.2.7",
+-        "react-dom": "^19.2.7"
++        "react-dom": "^19.2.7",
++        "react-router-dom": "^7.18.1"
+       },
+       "devDependencies": {
+         "@eslint/js": "^10.0.1",
+@@ -264,31 +265,6 @@
+         "node": ">=6.9.0"
+       }
+     },
+-    "node_modules/@emnapi/core": {
+-      "version": "1.11.1",
+-      "resolved": "https://registry.npmmirror.com/@emnapi/core/-/core-1.11.1.tgz",
+-      "integrity": "sha512-RSvbQmHzdKzNsLYa/wHrbc3KN4sYLKAdPZxqiM2HATqv/SBk2/ENSHpvXGaLOMcsAyz0poEGqkmmKYG3OWiJEQ==",
+-      "dev": true,
+-      "license": "MIT",
+-      "optional": true,
+-      "peer": true,
+-      "dependencies": {
+-        "@emnapi/wasi-threads": "1.2.2",
+-        "tslib": "^2.4.0"
+-      }
+-    },
+-    "node_modules/@emnapi/runtime": {
+-      "version": "1.11.1",
+-      "resolved": "https://registry.npmmirror.com/@emnapi/runtime/-/runtime-1.11.1.tgz",
+-      "integrity": "sha512-vgj7R3y3Wgx24IQaGPA/R6YFXLHVMOZ0uVEyIQPaWs+rd1AzfEMXlAC22FYwO1XkKR6NPsq7mUandH8oIRdZFw==",
+-      "dev": true,
+-      "license": "MIT",
+-      "optional": true,
+-      "peer": true,
+-      "dependencies": {
+-        "tslib": "^2.4.0"
+-      }
+-    },
+     "node_modules/@emnapi/wasi-threads": {
+       "version": "1.2.2",
+       "resolved": "https://registry.npmmirror.com/@emnapi/wasi-threads/-/wasi-threads-1.2.2.tgz",
+@@ -1056,6 +1032,19 @@
+       "dev": true,
+       "license": "MIT"
+     },
++    "node_modules/cookie": {
++      "version": "1.1.1",
++      "resolved": "https://registry.npmmirror.com/cookie/-/cookie-1.1.1.tgz",
++      "integrity": "sha512-ei8Aos7ja0weRpFzJnEA9UHJ/7XQmqglbRwnf2ATjcB9Wq874VKH9kfjjirM6UhU2/E5fFYadylyhFldcqSidQ==",
++      "license": "MIT",
++      "engines": {
++        "node": ">=18"
++      },
++      "funding": {
++        "type": "opencollective",
++        "url": "https://opencollective.com/express"
++      }
++    },
+     "node_modules/cross-spawn": {
+       "version": "7.0.6",
+       "resolved": "https://registry.npmmirror.com/cross-spawn/-/cross-spawn-7.0.6.tgz",
+@@ -2116,6 +2105,7 @@
+       "resolved": "https://registry.npmmirror.com/react-dom/-/react-dom-19.2.7.tgz",
+       "integrity": "sha512-t0BRVXvbiE/o20Hfw669rLbMCDWtYZLvmJigy2f0MxsXF+71pxhR3xOkspmsO8h3ZlNzyibAmtCa3l4lYKk6gQ==",
+       "license": "MIT",
++      "peer": true,
+       "dependencies": {
+         "scheduler": "^0.27.0"
+       },
+@@ -2123,6 +2113,44 @@
+         "react": "^19.2.7"
+       }
+     },
++    "node_modules/react-router": {
++      "version": "7.18.1",
++      "resolved": "https://registry.npmmirror.com/react-router/-/react-router-7.18.1.tgz",
++      "integrity": "sha512-GDLgg3i3uM0aeJO3Fm+TCS+sDQ7gu12T6x0qdTEzcwqEfleci7JwugVNIF3U//0FWKnJT7ptG+20B2jfDqnZAg==",
++      "license": "MIT",
++      "dependencies": {
++        "cookie": "^1.0.1",
++        "set-cookie-parser": "^2.6.0"
++      },
++      "engines": {
++        "node": ">=20.0.0"
++      },
++      "peerDependencies": {
++        "react": ">=18",
++        "react-dom": ">=18"
++      },
++      "peerDependenciesMeta": {
++        "react-dom": {
++          "optional": true
++        }
++      }
++    },
++    "node_modules/react-router-dom": {
++      "version": "7.18.1",
++      "resolved": "https://registry.npmmirror.com/react-router-dom/-/react-router-dom-7.18.1.tgz",
++      "integrity": "sha512-KaZh+X/6UtEp28x51AUYZDMg9NGoz2ja3dNHa+ta/tk40vCzKhQ/RypCWBMLbmDr6//E24Vv5uPsrqXFozdkAg==",
++      "license": "MIT",
++      "dependencies": {
++        "react-router": "7.18.1"
++      },
++      "engines": {
++        "node": ">=20.0.0"
++      },
++      "peerDependencies": {
++        "react": ">=18",
++        "react-dom": ">=18"
++      }
++    },
+     "node_modules/rolldown": {
+       "version": "1.1.5",
+       "resolved": "https://registry.npmmirror.com/rolldown/-/rolldown-1.1.5.tgz",
+@@ -2173,6 +2201,12 @@
+         "semver": "bin/semver.js"
+       }
+     },
++    "node_modules/set-cookie-parser": {
++      "version": "2.7.2",
++      "resolved": "https://registry.npmmirror.com/set-cookie-parser/-/set-cookie-parser-2.7.2.tgz",
++      "integrity": "sha512-oeM1lpU/UvhTxw+g3cIfxXHyJRc/uidd3yK1P242gzHds0udQBYzs3y8j4gCCW+ZJ7ad0yctld8RYO+bdurlvw==",
++      "license": "MIT"
++    },
+     "node_modules/shebang-command": {
+       "version": "2.0.0",
+       "resolved": "https://registry.npmmirror.com/shebang-command/-/shebang-command-2.0.0.tgz",
+diff --git a/Frontend/vite-project/package.json b/Frontend/vite-project/package.json
+index 1c833b4..f0b72fd 100644
+--- a/Frontend/vite-project/package.json
++++ b/Frontend/vite-project/package.json
+@@ -11,7 +11,8 @@
+   },
+   "dependencies": {
+     "react": "^19.2.7",
+-    "react-dom": "^19.2.7"
++    "react-dom": "^19.2.7",
++    "react-router-dom": "^7.18.1"
+   },
+   "devDependencies": {
+     "@eslint/js": "^10.0.1",
+diff --git a/Frontend/vite-project/src/App.css b/Frontend/vite-project/src/App.css
+index f90339d..045fefa 100644
+--- a/Frontend/vite-project/src/App.css
++++ b/Frontend/vite-project/src/App.css
+@@ -1,184 +1 @@
+-.counter {
+-  font-size: 16px;
+-  padding: 5px 10px;
+-  border-radius: 5px;
+-  color: var(--accent);
+-  background: var(--accent-bg);
+-  border: 2px solid transparent;
+-  transition: border-color 0.3s;
+-  margin-bottom: 24px;
+-
+-  &:hover {
+-    border-color: var(--accent-border);
+-  }
+-  &:focus-visible {
+-    outline: 2px solid var(--accent);
+-    outline-offset: 2px;
+-  }
+-}
+-
+-.hero {
+-  position: relative;
+-
+-  .base,
+-  .framework,
+-  .vite {
+-    inset-inline: 0;
+-    margin: 0 auto;
+-  }
+-
+-  .base {
+-    width: 170px;
+-    position: relative;
+-    z-index: 0;
+-  }
+-
+-  .framework,
+-  .vite {
+-    position: absolute;
+-  }
+-
+-  .framework {
+-    z-index: 1;
+-    top: 34px;
+-    height: 28px;
+-    transform: perspective(2000px) rotateZ(300deg) rotateX(44deg) rotateY(39deg)
+-      scale(1.4);
+-  }
+-
+-  .vite {
+-    z-index: 0;
+-    top: 107px;
+-    height: 26px;
+-    width: auto;
+-    transform: perspective(2000px) rotateZ(300deg) rotateX(40deg) rotateY(39deg)
+-      scale(0.8);
+-  }
+-}
+-
+-#center {
+-  display: flex;
+-  flex-direction: column;
+-  gap: 25px;
+-  place-content: center;
+-  place-items: center;
+-  flex-grow: 1;
+-
+-  @media (max-width: 1024px) {
+-    padding: 32px 20px 24px;
+-    gap: 18px;
+-  }
+-}
+-
+-#next-steps {
+-  display: flex;
+-  border-top: 1px solid var(--border);
+-  text-align: left;
+-
+-  & > div {
+-    flex: 1 1 0;
+-    padding: 32px;
+-    @media (max-width: 1024px) {
+-      padding: 24px 20px;
+-    }
+-  }
+-
+-  .icon {
+-    margin-bottom: 16px;
+-    width: 22px;
+-    height: 22px;
+-  }
+-
+-  @media (max-width: 1024px) {
+-    flex-direction: column;
+-    text-align: center;
+-  }
+-}
+-
+-#docs {
+-  border-right: 1px solid var(--border);
+-
+-  @media (max-width: 1024px) {
+-    border-right: none;
+-    border-bottom: 1px solid var(--border);
+-  }
+-}
+-
+-#next-steps ul {
+-  list-style: none;
+-  padding: 0;
+-  display: flex;
+-  gap: 8px;
+-  margin: 32px 0 0;
+-
+-  .logo {
+-    height: 18px;
+-  }
+-
+-  a {
+-    color: var(--text-h);
+-    font-size: 16px;
+-    border-radius: 6px;
+-    background: var(--social-bg);
+-    display: flex;
+-    padding: 6px 12px;
+-    align-items: center;
+-    gap: 8px;
+-    text-decoration: none;
+-    transition: box-shadow 0.3s;
+-
+-    &:hover {
+-      box-shadow: var(--shadow);
+-    }
+-    .button-icon {
+-      height: 18px;
+-      width: 18px;
+-    }
+-  }
+-
+-  @media (max-width: 1024px) {
+-    margin-top: 20px;
+-    flex-wrap: wrap;
+-    justify-content: center;
+-
+-    li {
+-      flex: 1 1 calc(50% - 8px);
+-    }
+-
+-    a {
+-      width: 100%;
+-      justify-content: center;
+-      box-sizing: border-box;
+-    }
+-  }
+-}
+-
+-#spacer {
+-  height: 88px;
+-  border-top: 1px solid var(--border);
+-  @media (max-width: 1024px) {
+-    height: 48px;
+-  }
+-}
+-
+-.ticks {
+-  position: relative;
+-  width: 100%;
+-
+-  &::before,
+-  &::after {
+-    content: '';
+-    position: absolute;
+-    top: -4.5px;
+-    border: 5px solid transparent;
+-  }
+-
+-  &::before {
+-    left: 0;
+-    border-left-color: var(--border);
+-  }
+-  &::after {
+-    right: 0;
+-    border-right-color: var(--border);
+-  }
+-}
++/* App.css cleared to rely on index.css for global styling */
+diff --git a/Frontend/vite-project/src/App.jsx b/Frontend/vite-project/src/App.jsx
+index 4f03aa1..eba0089 100644
+--- a/Frontend/vite-project/src/App.jsx
++++ b/Frontend/vite-project/src/App.jsx
+@@ -1,121 +1,17 @@
+-import { useState } from 'react'
+-import reactLogo from './assets/react.svg'
+-import viteLogo from './assets/vite.svg'
+-import heroImg from './assets/hero.png'
++import { Routes, Route, Navigate } from 'react-router-dom'
++import Login from './pages/Login'
++import Dashboard from './pages/Dashboard'
+ import './App.css'
+ 
+ function App() {
+-  const [count, setCount] = useState(0)
+-
+   return (
+-    <>
+-      <section id="center">
+-        <div className="hero">
+-          <img src={heroImg} className="base" width="170" height="179" alt="" />
+-          <img src={reactLogo} className="framework" alt="React logo" />
+-          <img src={viteLogo} className="vite" alt="Vite logo" />
+-        </div>
+-        <div>
+-          <h1>Get started</h1>
+-          <p>
+-            Edit <code>src/App.jsx</code> and save to test <code>HMR</code>
+-          </p>
+-        </div>
+-        <button
+-          type="button"
+-          className="counter"
+-          onClick={() => setCount((count) => count + 1)}
+-        >
+-          Count is {count}
+-        </button>
+-      </section>
+-
+-      <div className="ticks"></div>
+-
+-      <section id="next-steps">
+-        <div id="docs">
+-          <svg className="icon" role="presentation" aria-hidden="true">
+-            <use href="/icons.svg#documentation-icon"></use>
+-          </svg>
+-          <h2>Documentation</h2>
+-          <p>Your questions, answered</p>
+-          <ul>
+-            <li>
+-              <a href="https://vite.dev/" target="_blank">
+-                <img className="logo" src={viteLogo} alt="" />
+-                Explore Vite
+-              </a>
+-            </li>
+-            <li>
+-              <a href="https://react.dev/" target="_blank">
+-                <img className="button-icon" src={reactLogo} alt="" />
+-                Learn more
+-              </a>
+-            </li>
+-          </ul>
+-        </div>
+-        <div id="social">
+-          <svg className="icon" role="presentation" aria-hidden="true">
+-            <use href="/icons.svg#social-icon"></use>
+-          </svg>
+-          <h2>Connect with us</h2>
+-          <p>Join the Vite community</p>
+-          <ul>
+-            <li>
+-              <a href="https://github.com/vitejs/vite" target="_blank">
+-                <svg
+-                  className="button-icon"
+-                  role="presentation"
+-                  aria-hidden="true"
+-                >
+-                  <use href="/icons.svg#github-icon"></use>
+-                </svg>
+-                GitHub
+-              </a>
+-            </li>
+-            <li>
+-              <a href="https://chat.vite.dev/" target="_blank">
+-                <svg
+-                  className="button-icon"
+-                  role="presentation"
+-                  aria-hidden="true"
+-                >
+-                  <use href="/icons.svg#discord-icon"></use>
+-                </svg>
+-                Discord
+-              </a>
+-            </li>
+-            <li>
+-              <a href="https://x.com/vite_js" target="_blank">
+-                <svg
+-                  className="button-icon"
+-                  role="presentation"
+-                  aria-hidden="true"
+-                >
+-                  <use href="/icons.svg#x-icon"></use>
+-                </svg>
+-                X.com
+-              </a>
+-            </li>
+-            <li>
+-              <a href="https://bsky.app/profile/vite.dev" target="_blank">
+-                <svg
+-                  className="button-icon"
+-                  role="presentation"
+-                  aria-hidden="true"
+-                >
+-                  <use href="/icons.svg#bluesky-icon"></use>
+-                </svg>
+-                Bluesky
+-              </a>
+-            </li>
+-          </ul>
+-        </div>
+-      </section>
+-
+-      <div className="ticks"></div>
+-      <section id="spacer"></section>
+-    </>
++    <div className="app-container">
++      <Routes>
++        <Route path="/" element={<Navigate to="/login" replace />} />
++        <Route path="/login" element={<Login />} />
++        <Route path="/dashboard" element={<Dashboard />} />
++      </Routes>
++    </div>
+   )
+ }
+ 
+diff --git a/Frontend/vite-project/src/index.css b/Frontend/vite-project/src/index.css
+index 2c84af0..260739e 100644
+--- a/Frontend/vite-project/src/index.css
++++ b/Frontend/vite-project/src/index.css
+@@ -1,111 +1,141 @@
+ :root {
+-  --text: #6b6375;
+-  --text-h: #08060d;
+-  --bg: #fff;
+-  --border: #e5e4e7;
+-  --code-bg: #f4f3ec;
+-  --accent: #aa3bff;
+-  --accent-bg: rgba(170, 59, 255, 0.1);
+-  --accent-border: rgba(170, 59, 255, 0.5);
+-  --social-bg: rgba(244, 243, 236, 0.5);
+-  --shadow:
+-    rgba(0, 0, 0, 0.1) 0 10px 15px -3px, rgba(0, 0, 0, 0.05) 0 4px 6px -2px;
+-
+-  --sans: system-ui, 'Segoe UI', Roboto, sans-serif;
+-  --heading: system-ui, 'Segoe UI', Roboto, sans-serif;
+-  --mono: ui-monospace, Consolas, monospace;
+-
+-  font: 18px/145% var(--sans);
+-  letter-spacing: 0.18px;
+-  color-scheme: light dark;
+-  color: var(--text);
+-  background: var(--bg);
+-  font-synthesis: none;
+-  text-rendering: optimizeLegibility;
+-  -webkit-font-smoothing: antialiased;
+-  -moz-osx-font-smoothing: grayscale;
+-
+-  @media (max-width: 1024px) {
+-    font-size: 16px;
+-  }
++  --primary: #4f46e5;
++  --primary-hover: #4338ca;
++  --bg-color: #0f172a;
++  --card-bg: rgba(30, 41, 59, 0.7);
++  --text-main: #f8fafc;
++  --text-muted: #94a3b8;
++  --border-color: rgba(255, 255, 255, 0.1);
++  --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+ }
+ 
+-@media (prefers-color-scheme: dark) {
+-  :root {
+-    --text: #9ca3af;
+-    --text-h: #f3f4f6;
+-    --bg: #16171d;
+-    --border: #2e303a;
+-    --code-bg: #1f2028;
+-    --accent: #c084fc;
+-    --accent-bg: rgba(192, 132, 252, 0.15);
+-    --accent-border: rgba(192, 132, 252, 0.5);
+-    --social-bg: rgba(47, 48, 58, 0.5);
+-    --shadow:
+-      rgba(0, 0, 0, 0.4) 0 10px 15px -3px, rgba(0, 0, 0, 0.25) 0 4px 6px -2px;
+-  }
+-
+-  #social .button-icon {
+-    filter: invert(1) brightness(2);
+-  }
++* {
++  box-sizing: border-box;
++  margin: 0;
++  padding: 0;
+ }
+ 
+ body {
+-  margin: 0;
++  font-family: 'Inter', system-ui, Avenir, Helvetica, Arial, sans-serif;
++  background-color: var(--bg-color);
++  color: var(--text-main);
++  min-height: 100vh;
++  display: flex;
++  justify-content: center;
++  align-items: center;
++  background: radial-gradient(circle at top left, #1e1b4b, #0f172a, #020617);
++}
++
++.app-container {
++  width: 100%;
++  min-height: 100vh;
++  display: flex;
++  justify-content: center;
++  align-items: center;
+ }
+ 
+-#root {
+-  width: 1126px;
+-  max-width: 100%;
+-  margin: 0 auto;
++.glass-card {
++  background: var(--card-bg);
++  backdrop-filter: blur(16px);
++  -webkit-backdrop-filter: blur(16px);
++  border: 1px solid var(--border-color);
++  border-radius: 20px;
++  padding: 2.5rem;
++  width: 100%;
++  max-width: 420px;
++  box-shadow: var(--glass-shadow);
++  animation: slideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1);
++}
++
++.glass-card h1 {
++  font-size: 1.8rem;
++  margin-bottom: 1.5rem;
+   text-align: center;
+-  border-inline: 1px solid var(--border);
+-  min-height: 100svh;
++  background: linear-gradient(135deg, #a5b4fc, #818cf8);
++  -webkit-background-clip: text;
++  -webkit-text-fill-color: transparent;
++}
++
++.input-group {
++  margin-bottom: 1.25rem;
+   display: flex;
+   flex-direction: column;
+-  box-sizing: border-box;
+ }
+ 
+-h1,
+-h2 {
+-  font-family: var(--heading);
+-  font-weight: 500;
+-  color: var(--text-h);
++.input-group label {
++  font-size: 0.875rem;
++  color: var(--text-muted);
++  margin-bottom: 0.5rem;
+ }
+ 
+-h1 {
+-  font-size: 56px;
+-  letter-spacing: -1.68px;
+-  margin: 32px 0;
+-  @media (max-width: 1024px) {
+-    font-size: 36px;
+-    margin: 20px 0;
+-  }
++.input-group input, .input-group select {
++  width: 100%;
++  padding: 0.75rem 1rem;
++  border-radius: 10px;
++  border: 1px solid var(--border-color);
++  background: rgba(15, 23, 42, 0.6);
++  color: var(--text-main);
++  font-size: 1rem;
++  outline: none;
++  transition: all 0.3s ease;
+ }
+-h2 {
+-  font-size: 24px;
+-  line-height: 118%;
+-  letter-spacing: -0.24px;
+-  margin: 0 0 8px;
+-  @media (max-width: 1024px) {
+-    font-size: 20px;
+-  }
++
++.input-group input:focus, .input-group select:focus {
++  border-color: var(--primary);
++  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.2);
+ }
+-p {
+-  margin: 0;
++
++.btn {
++  width: 100%;
++  padding: 0.875rem;
++  border-radius: 10px;
++  border: none;
++  background: var(--primary);
++  color: white;
++  font-size: 1rem;
++  font-weight: 600;
++  cursor: pointer;
++  transition: all 0.3s ease;
++  margin-top: 1rem;
++}
++
++.btn:hover {
++  background: var(--primary-hover);
++  transform: translateY(-2px);
++  box-shadow: 0 4px 12px rgba(79, 70, 229, 0.4);
+ }
+ 
+-code,
+-.counter {
+-  font-family: var(--mono);
+-  display: inline-flex;
+-  border-radius: 4px;
+-  color: var(--text-h);
++.btn:active {
++  transform: translateY(0);
+ }
+ 
+-code {
+-  font-size: 15px;
+-  line-height: 135%;
+-  padding: 4px 8px;
+-  background: var(--code-bg);
++.message {
++  margin-top: 1rem;
++  text-align: center;
++  font-size: 0.875rem;
++  color: #10b981;
++}
++
++.error {
++  color: #ef4444;
++}
++
++.dashboard-container {
++  text-align: center;
++}
++
++.dashboard-container p {
++  color: var(--text-muted);
++  margin-bottom: 1.5rem;
++}
++
++@keyframes slideUp {
++  from {
++    opacity: 0;
++    transform: translateY(20px);
++  }
++  to {
++    opacity: 1;
++    transform: translateY(0);
++  }
+ }
+diff --git a/Frontend/vite-project/src/main.jsx b/Frontend/vite-project/src/main.jsx
+index b9a1a6d..2898346 100644
+--- a/Frontend/vite-project/src/main.jsx
++++ b/Frontend/vite-project/src/main.jsx
+@@ -1,10 +1,13 @@
+ import { StrictMode } from 'react'
+ import { createRoot } from 'react-dom/client'
++import { BrowserRouter } from 'react-router-dom'
+ import './index.css'
+ import App from './App.jsx'
+ 
+ createRoot(document.getElementById('root')).render(
+   <StrictMode>
+-    <App />
++    <BrowserRouter>
++      <App />
++    </BrowserRouter>
+   </StrictMode>,
+ )
+diff --git a/Frontend/vite-project/src/pages/Dashboard.jsx b/Frontend/vite-project/src/pages/Dashboard.jsx
+new file mode 100644
+index 0000000..97f877f
+--- /dev/null
++++ b/Frontend/vite-project/src/pages/Dashboard.jsx
+@@ -0,0 +1,20 @@
++import { useLocation, useNavigate } from 'react-router-dom';
++
++const Dashboard = () => {
++  const location = useLocation();
++  const navigate = useNavigate();
++  const user = location.state?.user || { email: 'Guest', role: 'Unknown' };
++
++  return (
++    <div className="glass-card dashboard-container">
++      <h1>Dashboard</h1>
++      <p>Welcome, <strong>{user.email}</strong>!</p>
++      <p>Your role is: <span style={{color: 'var(--primary)', textTransform: 'capitalize'}}>{user.role}</span></p>
++      <p style={{marginTop: '2rem'}}>The specific dashboard features will be uploaded later as per instructions.</p>
++      
++      <button className="btn" onClick={() => navigate('/login')}>Logout</button>
++    </div>
++  );
++};
++
++export default Dashboard;
+diff --git a/Frontend/vite-project/src/pages/Login.jsx b/Frontend/vite-project/src/pages/Login.jsx
+new file mode 100644
+index 0000000..1f04416
+--- /dev/null
++++ b/Frontend/vite-project/src/pages/Login.jsx
+@@ -0,0 +1,107 @@
++import { useState } from 'react';
++import { useNavigate } from 'react-router-dom';
++
++const Login = () => {
++  const [isLogin, setIsLogin] = useState(true);
++  const [email, setEmail] = useState('');
++  const [password, setPassword] = useState('');
++  const [role, setRole] = useState('Driver'); // Default role
++  const [error, setError] = useState('');
++  const [message, setMessage] = useState('');
++  const navigate = useNavigate();
++
++  const handleSubmit = async (e) => {
++    e.preventDefault();
++    setError('');
++    setMessage('');
++
++    const endpoint = isLogin ? '/api/login' : '/api/signup';
++    const payload = { email, password, role };
++
++    try {
++      const response = await fetch(`http://localhost:5000${endpoint}`, {
++        method: 'POST',
++        headers: { 'Content-Type': 'application/json' },
++        body: JSON.stringify(payload)
++      });
++
++      const data = await response.json();
++
++      if (response.status === 200) {
++        if (isLogin) {
++          navigate('/dashboard', { state: { user: data.user } });
++        } else {
++          setMessage('Registered successfully');
++          setIsLogin(true);
++          setPassword(''); // Clear password for them to login
++        }
++      } else if (response.status === 401) {
++        setError(data.message || 'Authentication failed');
++      } else {
++        setError('An unexpected error occurred');
++      }
++    } catch (err) {
++      setError('Could not connect to the backend server. Please make sure it is running.');
++    }
++  };
++
++  return (
++    <div className="glass-card">
++      <h1>{isLogin ? 'Welcome Back' : 'Create Account'}</h1>
++      <form onSubmit={handleSubmit}>
++        <div className="input-group">
++          <label htmlFor="role">Role</label>
++          <select id="role" value={role} onChange={(e) => setRole(e.target.value)}>
++            <option value="Fleet Manager">Fleet Manager</option>
++            <option value="Driver">Driver</option>
++            <option value="Financial Analyst">Financial Analyst</option>
++            <option value="Safety Officer">Safety Officer</option>
++          </select>
++        </div>
++        
++        <div className="input-group">
++          <label htmlFor="email">Email</label>
++          <input
++            type="email"
++            id="email"
++            value={email}
++            onChange={(e) => setEmail(e.target.value)}
++            placeholder="Enter your email"
++            required
++          />
++        </div>
++        
++        <div className="input-group">
++          <label htmlFor="password">Password</label>
++          <input
++            type="password"
++            id="password"
++            value={password}
++            onChange={(e) => setPassword(e.target.value)}
++            placeholder="Enter your password"
++            required
++          />
++        </div>
++        
++        {error && <p className="error message">{error}</p>}
++        {message && <p className="message" style={{color: '#10b981'}}>{message}</p>}
++        
++        <button type="submit" className="btn">
++          {isLogin ? 'Sign In' : 'Sign Up'}
++        </button>
++      </form>
++      
++      <p style={{textAlign: 'center', marginTop: '1.5rem', fontSize: '0.9rem'}}>
++        {isLogin ? "Don't have an account? " : "Already have an account? "}
++        <span 
++          style={{color: 'var(--primary)', cursor: 'pointer', fontWeight: 'bold'}}
++          onClick={() => { setIsLogin(!isLogin); setError(''); setMessage(''); }}
++        >
++          {isLogin ? 'Sign Up' : 'Sign In'}
++        </span>
++      </p>
++    </div>
++  );
++};
++
++export default Login;
+-- 
+2.55.0.windows.2
+

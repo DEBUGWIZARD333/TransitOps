@@ -32,6 +32,9 @@ const AppRoutes = () => (
       <Route path={ROUTES.maintenance} element={<MaintenanceDashboardPage />} />
       <Route path={ROUTES.trips} element={<TripListPage />} />
       <Route path={ROUTES.reports} element={<FleetAnalyticsPage />} />
+    </Route>
+
+    <Route element={<ProtectedRoute requiredRole="fleet_manager"><AppShell /></ProtectedRoute>}>
       <Route path={ROUTES.admin} element={<AdminPage />} />
     </Route>
   </Routes>

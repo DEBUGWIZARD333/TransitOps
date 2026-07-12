@@ -1,16 +1,17 @@
 const TOKEN_KEY = 'transitops.token';
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000';
 
 const encodeBase64Url = (value) => {
   const encoded = btoa(unescape(encodeURIComponent(value)));
   return encoded.replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/g, '');
 };
 
-const createMockJwt = ({ email, role }) => {
+const createMockJwt = ({ email, role, name }) => {
   const payload = {
     sub: email,
     email,
     role,
+    name,
     exp: Math.floor(Date.now() / 1000) + 60 * 60,
   };
 
@@ -68,43 +69,29 @@ export const isTokenValid = (token) => {
   return !expiry || Date.now() / 1000 < expiry;
 };
 
-export const loginUser = async ({ email, password }) => {
+export const loginUser = async ({ email, username, password, role }) => {
   try {
     const response = await fetch(`${API_BASE_URL}/auth/login`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, password }),
+      body: JSON.stringify({
+        email: email || username,
+        username,
+        password,
+        role: role || 'Fleet Manager',
+      }),
     });
 
     const data = await response.json().catch(() => ({}));
     if (!response.ok) {
-      throw new Error(data.message || 'Login failed');
+      throw new Error(data.error || data.message || 'Login failed');
     }
 
-    if (!data.token && data.accessToken) {
-      data.token = data.accessToken;
-    }
-
-    if (!data.token) {
-      throw new Error('No token returned');
-    }
-
-    saveToken(data.token);
-    return data;
+    const token = data.token || createMockJwt({ email: data.user?.email, role: data.user?.role, name: data.user?.name });
+    saveToken(token);
+    return { token, user: data.user };
   } catch (error) {
-    const role = email.includes('driver')
-      ? 'Driver'
-      : email.includes('safety')
-        ? 'Safety Officer'
-        : email.includes('finance')
-          ? 'Financial Analyst'
-          : 'Fleet Manager';
-    const fallbackToken = createMockJwt({ email, role });
-    saveToken(fallbackToken);
-    return {
-      token: fallbackToken,
-      user: { email, role, name: role },
-    };
+    throw error;
   }
 };
 
@@ -120,7 +107,8 @@ export const apiRequest = async (url, options = {}) => {
     headers.set('Content-Type', 'application/json');
   }
 
-  const response = await fetch(`${API_BASE_URL}${url}`, {
+  const requestUrl = /^https?:\/\//.test(url) ? url : `${API_BASE_URL}${url}`;
+  const response = await fetch(requestUrl, {
     ...options,
     headers,
   });

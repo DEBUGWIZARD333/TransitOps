@@ -13,7 +13,7 @@ const AdminPage = () => {
   const [users, setUsers] = useState([]);
   const [roleFilter, setRoleFilter] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [form, setForm] = useState({ name: '', email: '', password: '', role: roleOptions[0] });
+  const [form, setForm] = useState({ username: '', password: '', role: roleOptions[0] });
   const [formErrors, setFormErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [temporaryPassword, setTemporaryPassword] = useState('');
@@ -34,8 +34,7 @@ const AdminPage = () => {
 
   const validateForm = () => {
     const errors = {};
-    if (!form.name.trim()) errors.name = 'Name is required.';
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) errors.email = 'Enter a valid email address.';
+    if (!form.username.trim()) errors.username = 'Username is required.';
     if (!form.password || form.password.length < 8) errors.password = 'Password must be at least 8 characters.';
     return errors;
   };
@@ -52,15 +51,14 @@ const AdminPage = () => {
     setFormErrors({});
     try {
       const createdUser = await createAdminUser({
-        name: form.name.trim(),
-        email: form.email.trim(),
+        username: form.username.trim(),
         password: form.password,
         role: form.role,
       });
-      setStatusMessage(`User created successfully for ${createdUser.name || form.name}.`);
+      setStatusMessage(`User created successfully for ${createdUser.name || form.username}.`);
       setTemporaryPassword(createdUser.temporaryPassword || form.password);
       setPendingUser(createdUser);
-      setForm({ name: '', email: '', password: '', role: roleOptions[0] });
+      setForm({ username: '', password: '', role: roleOptions[0] });
       setIsModalOpen(false);
       const data = await fetchAdminUsers(roleFilter);
       setUsers(data);
@@ -117,7 +115,7 @@ const AdminPage = () => {
           <table className="min-w-full divide-y divide-slate-200 text-sm">
             <thead className="bg-slate-50 text-left text-slate-600">
               <tr>
-                <th className="px-4 py-3 font-medium">Name</th>
+                <th className="px-4 py-3 font-medium">Username</th>
                 <th className="px-4 py-3 font-medium">Email</th>
                 <th className="px-4 py-3 font-medium">Role</th>
                 <th className="px-4 py-3 font-medium">Status</th>
@@ -128,8 +126,8 @@ const AdminPage = () => {
             <tbody className="divide-y divide-slate-100 bg-white">
               {filteredUsers.map((entry) => (
                 <tr key={entry.id} className="hover:bg-slate-50">
-                  <td className="px-4 py-3 font-medium text-slate-800">{entry.name}</td>
-                  <td className="px-4 py-3 text-slate-600">{entry.email}</td>
+                  <td className="px-4 py-3 font-medium text-slate-800">{entry.name || entry.username}</td>
+                  <td className="px-4 py-3 text-slate-600">{entry.email || '-'}</td>
                   <td className="px-4 py-3 text-slate-600">{entry.role}</td>
                   <td className="px-4 py-3">
                     <span className={`rounded-full px-3 py-1 text-xs font-semibold ${entry.status === 'Active' ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700'}`}>
@@ -170,14 +168,9 @@ const AdminPage = () => {
             <form onSubmit={handleRegister} className="space-y-4">
               {formErrors.form ? <div className="rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-700">{formErrors.form}</div> : null}
               <label className="block text-sm text-slate-600">
-                <span className="mb-2 block font-medium text-slate-700">Name</span>
-                <input value={form.name} onChange={(event) => setForm((current) => ({ ...current, name: event.target.value }))} className="w-full rounded-xl border border-slate-200 px-3 py-2 outline-none" />
-                {formErrors.name ? <p className="mt-1 text-xs text-rose-600">{formErrors.name}</p> : null}
-              </label>
-              <label className="block text-sm text-slate-600">
-                <span className="mb-2 block font-medium text-slate-700">Email</span>
-                <input type="email" value={form.email} onChange={(event) => setForm((current) => ({ ...current, email: event.target.value }))} className="w-full rounded-xl border border-slate-200 px-3 py-2 outline-none" />
-                {formErrors.email ? <p className="mt-1 text-xs text-rose-600">{formErrors.email}</p> : null}
+                <span className="mb-2 block font-medium text-slate-700">Username</span>
+                <input value={form.username} onChange={(event) => setForm((current) => ({ ...current, username: event.target.value }))} className="w-full rounded-xl border border-slate-200 px-3 py-2 outline-none" />
+                {formErrors.username ? <p className="mt-1 text-xs text-rose-600">{formErrors.username}</p> : null}
               </label>
               <label className="block text-sm text-slate-600">
                 <span className="mb-2 block font-medium text-slate-700">Password</span>

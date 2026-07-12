@@ -36,12 +36,12 @@ export const createAdminUser = async (payload) => {
     });
     const data = await response.json().catch(() => ({}));
     if (!response.ok) {
-      throw new Error(data.message || 'Unable to create user');
+      throw new Error(data.error || data.message || 'Unable to create user');
     }
     return data;
   } catch (error) {
     if (error.message?.toLowerCase().includes('duplicate') || error.message?.toLowerCase().includes('exists')) {
-      throw new Error('A user with this email already exists.');
+      throw new Error('A user with this username already exists.');
     }
     throw error;
   }
