@@ -5,44 +5,37 @@ const usersTable = [];
 
 const VALID_ROLES = ['fleet_manager', 'dispatcher', 'driver', 'safety_officer', 'financial_analyst'];
 
+const ROLE_ALIASES = {
+  admin: 'fleet_manager',
+  fleet_manager: 'fleet_manager',
+  fleet: 'fleet_manager',
+  dispatcher: 'dispatcher',
+  driver: 'driver',
+  safety_officer: 'safety_officer',
+  safety: 'safety_officer',
+  financial_analyst: 'financial_analyst',
+  finance: 'financial_analyst',
+};
+
+const ROLE_LABELS = {
+  fleet_manager: 'Fleet Manager',
+  dispatcher: 'Dispatcher',
+  driver: 'Driver',
+  safety_officer: 'Safety Officer',
+  financial_analyst: 'Financial Analyst',
+};
+
 function normalizeRole(role) {
-  const normalizedRole = String(role || '')
-    .trim()
-    .toLowerCase()
-    .replace(/\s+/g, '_')
-    .replace(/-/g, '_');
-
-  const aliases = {
-    admin: 'fleet_manager',
-    fleet_manager: 'fleet_manager',
-    fleet: 'fleet_manager',
-    dispatcher: 'dispatcher',
-    driver: 'driver',
-    safety_officer: 'safety_officer',
-    safety: 'safety_officer',
-    financial_analyst: 'financial_analyst',
-    finance: 'financial_analyst',
-  };
-
-  const mappedRole = aliases[normalizedRole] || normalizedRole;
-
+  const normalizedRole = String(role || '').trim().toLowerCase().replace(/\s+/g, '_').replace(/-/g, '_');
+  const mappedRole = ROLE_ALIASES[normalizedRole] || normalizedRole;
   if (!VALID_ROLES.includes(mappedRole)) {
     throw new Error('Invalid role');
   }
-
   return mappedRole;
 }
 
 function formatRole(role) {
-  const roleMap = {
-    fleet_manager: 'Fleet Manager',
-    dispatcher: 'Dispatcher',
-    driver: 'Driver',
-    safety_officer: 'Safety Officer',
-    financial_analyst: 'Financial Analyst'
-  };
-
-  return roleMap[role] || role;
+  return ROLE_LABELS[role] || role;
 }
 
 function getUsernameFromInput(name, username, email) {
@@ -59,16 +52,18 @@ async function seedDefaultAdmin() {
     return;
   }
 
-  const password_hash = await bcrypt.hash('Admin@1234', 10);
+  const passwordHash = await bcrypt.hash('Admin@1234', 10);
   usersTable.push({
     id: 'admin_1',
     name: 'Admin',
     username: 'admin',
     email: 'admin@transitops.com',
-    password_hash,
+    password_hash: passwordHash,
     role: 'fleet_manager',
     status: 'Active',
-    createdAt: new Date().toISOString()
+    loginAttempts: 0,
+    lockedUntil: null,
+    createdAt: new Date().toISOString(),
   });
 }
 
@@ -77,8 +72,8 @@ async function signupUser({ name, email, username, password, role }) {
   const normalizedUsername = getUsernameFromInput(name, username, email);
   const normalizedEmail = getEmailFromInput(normalizedUsername, email);
 
-  if (!normalizedUsername || !password) {
-    const error = new Error('Username and password are required');
+  if (!normalizedUsername || !password || !normalizedEmail) {
+    const error = new Error('Username, email, and password are required');
     error.statusCode = 400;
     throw error;
   }
@@ -95,16 +90,18 @@ async function signupUser({ name, email, username, password, role }) {
     throw error;
   }
 
-  const password_hash = await bcrypt.hash(password, 10);
+  const passwordHash = await bcrypt.hash(password, 10);
   const user = {
     id: `user_${usersTable.length + 1}`,
     name: normalizedUsername,
     username: normalizedUsername,
     email: normalizedEmail,
-    password_hash,
+    password_hash: passwordHash,
     role: normalizedRole,
     status: 'Active',
-    createdAt: new Date().toISOString()
+    loginAttempts: 0,
+    lockedUntil: null,
+    createdAt: new Date().toISOString(),
   };
 
   usersTable.push(user);
@@ -116,13 +113,9 @@ async function signupUser({ name, email, username, password, role }) {
       username: user.username,
       email: user.email,
       role: user.role,
-      status: user.status
-    }
+      status: user.status,
+    },
   };
-}
-
-async function createAdminUser(payload) {
-  return signupUser(payload);
 }
 
 async function loginUser({ email, username, password }) {
@@ -134,22 +127,35 @@ async function loginUser({ email, username, password }) {
   });
 
   if (!user) {
-    const error = new Error('Invalid credentials');
+    const error = new Error('Invalid email or password.');
     error.statusCode = 401;
+    throw error;
+  }
+
+  if (user.lockedUntil && new Date(user.lockedUntil) > new Date()) {
+    const error = new Error('Account locked after 5 failed login attempts.');
+    error.statusCode = 423;
     throw error;
   }
 
   const isValid = await bcrypt.compare(password, user.password_hash);
 
   if (!isValid) {
-    const error = new Error('Invalid credentials');
-    error.statusCode = 401;
+    user.loginAttempts = (user.loginAttempts || 0) + 1;
+    if (user.loginAttempts >= 5) {
+      user.lockedUntil = new Date(Date.now() + 15 * 60 * 1000).toISOString();
+      user.status = 'Locked';
+    }
+    const error = new Error(user.loginAttempts >= 5 ? 'Account locked after 5 failed login attempts.' : 'Invalid email or password.');
+    error.statusCode = user.loginAttempts >= 5 ? 423 : 401;
     throw error;
   }
 
-  const token = jwt.sign({ sub: user.id, email: user.email, role: user.role, name: user.name }, process.env.JWT_SECRET || 'dev-secret', {
-    expiresIn: '1h'
-  });
+  user.loginAttempts = 0;
+  user.lockedUntil = null;
+  user.status = 'Active';
+
+  const token = jwt.sign({ sub: user.id, email: user.email, role: user.role, name: user.name }, process.env.JWT_SECRET || 'dev-secret', { expiresIn: '8h' });
 
   return {
     token,
@@ -159,8 +165,8 @@ async function loginUser({ email, username, password }) {
       username: user.username,
       email: user.email,
       role: user.role,
-      status: user.status
-    }
+      status: user.status,
+    },
   };
 }
 
@@ -177,19 +183,11 @@ function authenticateJWT(req, res, next) {
     const user = usersTable.find((entry) => entry.id === decoded.sub);
 
     if (!user) {
-      req.user = {
-        id: decoded.sub,
-        email: decoded.email,
-        role: decoded.role
-      };
+      req.user = { id: decoded.sub, email: decoded.email, role: decoded.role };
       return next();
     }
 
-    req.user = {
-      id: user.id,
-      email: user.email,
-      role: user.role
-    };
+    req.user = { id: user.id, email: user.email, role: user.role, name: user.name };
     return next();
   } catch (error) {
     return res.status(401).json({ error: 'Unauthorized' });
@@ -201,64 +199,31 @@ function authorizeRoles(...allowedRoles) {
     if (!req.user || !allowedRoles.includes(req.user.role)) {
       return res.status(403).json({ error: 'Forbidden' });
     }
-
     return next();
   };
 }
 
-function listUsers(roleFilter = '') {
-  return usersTable
-    .filter((entry) => !roleFilter || formatRole(entry.role) === roleFilter)
-    .map((entry) => ({
-      id: entry.id,
-      name: entry.name,
-      username: entry.username,
-      email: entry.email,
-      role: formatRole(entry.role),
-      status: entry.status || 'Active',
-      createdAt: entry.createdAt
-    }));
-}
-
-function disableUser(userId) {
-  const user = usersTable.find((entry) => entry.id === userId);
-
-  if (!user) {
-    const error = new Error('User not found');
-    error.statusCode = 404;
-    throw error;
-  }
-
-  user.status = 'Disabled';
-  return user;
-}
-
-async function resetUserPassword(userId, temporaryPassword) {
-  const user = usersTable.find((entry) => entry.id === userId);
-
-  if (!user) {
-    const error = new Error('User not found');
-    error.statusCode = 404;
-    throw error;
-  }
-
-  user.password_hash = await bcrypt.hash(temporaryPassword, 10);
-  return user;
+function listUsers() {
+  return usersTable.map((entry) => ({
+    id: entry.id,
+    name: entry.name,
+    username: entry.username,
+    email: entry.email,
+    role: formatRole(entry.role),
+    status: entry.status || 'Active',
+    createdAt: entry.createdAt,
+  }));
 }
 
 seedDefaultAdmin();
 
 module.exports = {
+  usersTable,
   signupUser,
-  createAdminUser,
   loginUser,
   authenticateJWT,
   authorizeRoles,
   listUsers,
-  disableUser,
-  resetUserPassword,
-  usersTable,
-  VALID_ROLES,
+  normalizeRole,
   formatRole,
-  normalizeRole
 };

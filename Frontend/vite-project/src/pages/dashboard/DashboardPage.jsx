@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useState } from 'react';
 import Header from '../../components/common/Header';
-import { fetchDashboardKpis } from '../../services/dashboardService';
+import { fetchDashboardKpis, fetchDashboardTrips, fetchVehicleStatus } from '../../services/dashboardService';
 import { useAuth } from '../../contexts/AuthContext';
-import './DashboardPage.css'; // Importing Vanilla CSS
+import './DashboardPage.css';
 
 const kpiConfig = [
   { key: 'activeVehicles', label: 'ACTIVE VEHICLES', color: 'blue' },
@@ -14,43 +14,31 @@ const kpiConfig = [
   { key: 'fleetUtilization', label: 'FLEET UTILIZATION', color: 'green' },
 ];
 
-const mockRecentTrips = [
-  { trip: 'TR001', vehicle: 'VAN-05', driver: 'Alex', status: 'On Trip', eta: '45 min' },
-  { trip: 'TR002', vehicle: 'TRK-12', driver: 'John', status: 'Completed', eta: '-' },
-  { trip: 'TR003', vehicle: 'MINI-08', driver: 'Priya', status: 'Dispatched', eta: '1h 10m' },
-  { trip: 'TR004', vehicle: '-', driver: '-', status: 'Draft', eta: 'Awaiting vehicle' },
-];
-
-const mockVehicleStatus = [
-  { label: 'Available', percent: 80, color: 'green' },
-  { label: 'On Trip', percent: 40, color: 'blue' },
-  { label: 'In Shop', percent: 10, color: 'orange' },
-  { label: 'Retired', percent: 5, color: 'red' },
-];
-
 const DashboardPage = () => {
   const [filters, setFilters] = useState({ vehicleType: '', status: '', region: '' });
   const [kpis, setKpis] = useState({});
+  const [trips, setTrips] = useState([]);
+  const [vehicleStatus, setVehicleStatus] = useState([]);
   const [loading, setLoading] = useState(true);
-  
+  const [error, setError] = useState('');
+
   const { user } = useAuth() || { user: { role: 'Fleet Manager' } };
 
   useEffect(() => {
     const loadDashboard = async () => {
       setLoading(true);
       try {
-        const kpiData = await fetchDashboardKpis(filters);
+        const [kpiData, tripsData, vehicleStatusData] = await Promise.all([
+          fetchDashboardKpis(filters),
+          fetchDashboardTrips(filters),
+          fetchVehicleStatus(filters),
+        ]);
         setKpis(kpiData);
+        setTrips(tripsData);
+        setVehicleStatus(vehicleStatusData);
+        setError('');
       } catch (e) {
-        setKpis({
-          activeVehicles: 53,
-          availableVehicles: 42,
-          vehiclesInMaintenance: 5,
-          activeTrips: 18,
-          pendingTrips: 9,
-          driversOnDuty: 26,
-          fleetUtilization: 81
-        });
+        setError('Unable to load dashboard data.');
       }
       setLoading(false);
     };
@@ -76,18 +64,6 @@ const DashboardPage = () => {
         return 'gray';
     }
   };
-
-  if (user?.role !== 'Fleet Manager') {
-    return (
-      <div className="access-denied-container">
-        <div className="access-denied-box">
-          <h2>Access Denied</h2>
-          <p>You must be a <strong>Fleet Manager</strong> to view this Dashboard panel.</p>
-          <p className="access-denied-role">Your current role: {user?.role}</p>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="dashboard-container">
@@ -120,6 +96,10 @@ const DashboardPage = () => {
         </div>
       </div>
 
+      {error ? <div className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">{error}</div> : null}
+
+      {loading ? <div className="rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-600">Loading dashboard...</div> : null}
+
       {/* KPI CARDS */}
       <div className="kpi-grid">
         {kpiCards.map((item) => (
@@ -148,7 +128,7 @@ const DashboardPage = () => {
                 </tr>
               </thead>
               <tbody>
-                {mockRecentTrips.map((trip, idx) => (
+                {trips.map((trip, idx) => (
                   <tr key={idx}>
                     <td>{trip.trip}</td>
                     <td>{trip.vehicle}</td>
@@ -170,7 +150,7 @@ const DashboardPage = () => {
         <div>
           <h3 className="section-title">Vehicle Status</h3>
           <div className="vehicle-status-list">
-            {mockVehicleStatus.map((status, idx) => (
+            {vehicleStatus.map((status, idx) => (
               <div key={idx} className="status-row">
                 <div className="status-label">{status.label}</div>
                 <div className="progress-bar-container">

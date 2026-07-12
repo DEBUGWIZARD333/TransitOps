@@ -5,11 +5,15 @@ import Card from '../../components/common/Card';
 import Header from '../../components/common/Header';
 import { createAdminUser, disableAdminUser, fetchAdminUsers, resetAdminUserPassword } from '../../services/adminService';
 import { useAuth } from '../../contexts/AuthContext';
+import { canPerformAction } from '../../config/rolePermissions';
 
-const roleOptions = ['Fleet Manager', 'Driver', 'Safety Officer', 'Financial Analyst'];
+const roleOptions = ['Admin', 'Fleet Manager', 'Dispatcher', 'Safety Officer', 'Financial Analyst'];
 
 const AdminPage = () => {
   const { user } = useAuth();
+  const canCreateUsers = canPerformAction(user?.role, 'create');
+  const canEditUsers = canPerformAction(user?.role, 'edit');
+  const canDeleteUsers = canPerformAction(user?.role, 'delete');
   const [users, setUsers] = useState([]);
   const [roleFilter, setRoleFilter] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -103,9 +107,11 @@ const AdminPage = () => {
                 {roleOptions.map((role) => <option key={role} value={role}>{role}</option>)}
               </select>
             </label>
-            <Button onClick={() => setIsModalOpen(true)} className="flex items-center justify-center gap-2 rounded-full">
-              <UserPlus size={16} /> Register new user
-            </Button>
+            {canCreateUsers ? (
+              <Button onClick={() => setIsModalOpen(true)} className="flex items-center justify-center gap-2 rounded-full">
+                <UserPlus size={16} /> Register new user
+              </Button>
+            ) : null}
           </div>
         </div>
 
@@ -137,12 +143,16 @@ const AdminPage = () => {
                   <td className="px-4 py-3 text-slate-600">{entry.createdAt}</td>
                   <td className="px-4 py-3">
                     <div className="flex flex-wrap gap-2">
-                      <button className="rounded-lg border border-slate-200 p-2 text-slate-600 transition hover:bg-slate-100" title="Edit user">
-                        <PencilLine size={15} />
-                      </button>
-                      <button onClick={() => setConfirmUserId(entry.id)} className="rounded-lg border border-slate-200 p-2 text-amber-600 transition hover:bg-amber-50" title="Disable user">
-                        <ShieldAlert size={15} />
-                      </button>
+                      {canEditUsers ? (
+                        <button className="rounded-lg border border-slate-200 p-2 text-slate-600 transition hover:bg-slate-100" title="Edit user">
+                          <PencilLine size={15} />
+                        </button>
+                      ) : null}
+                      {canDeleteUsers ? (
+                        <button onClick={() => setConfirmUserId(entry.id)} className="rounded-lg border border-slate-200 p-2 text-amber-600 transition hover:bg-amber-50" title="Disable user">
+                          <ShieldAlert size={15} />
+                        </button>
+                      ) : null}
                       <button onClick={() => handleResetPassword(entry.id)} className="rounded-lg border border-slate-200 p-2 text-sky-600 transition hover:bg-sky-50" title="Reset password">
                         <KeyRound size={15} />
                       </button>

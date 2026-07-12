@@ -1,16 +1,23 @@
-import { Navigate } from 'react-router-dom';
+import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
+import { canAccessRoute } from '../../config/rolePermissions';
+import AccessDeniedPage from '../../pages/error/AccessDeniedPage';
 import { ROUTES } from '../../routes/routeConstants';
 
-const ProtectedRoute = ({ children, requiredRole }) => {
+const ProtectedRoute = ({ children }) => {
   const { isAuthenticated, user } = useAuth();
+  const location = useLocation();
 
   if (!isAuthenticated) {
     return <Navigate to={ROUTES.login} replace />;
   }
 
-  if (requiredRole && user?.role !== requiredRole) {
+  if (location.pathname === ROUTES.root) {
     return <Navigate to={ROUTES.dashboard} replace />;
+  }
+
+  if (!canAccessRoute(user?.role, location.pathname)) {
+    return <AccessDeniedPage requestedPath={location.pathname} />;
   }
 
   return children;

@@ -1,4 +1,4 @@
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '';
+import api from './api';
 
 const buildQueryString = (filters) => {
   const params = new URLSearchParams();
@@ -12,40 +12,16 @@ const buildQueryString = (filters) => {
 };
 
 export const fetchDashboardKpis = async (filters = {}) => {
-  try {
-    const response = await fetch(`${API_BASE_URL}/dashboard/kpis${buildQueryString(filters)}`);
-    if (!response.ok) {
-      throw new Error('Unable to load dashboard KPIs');
-    }
-    return response.json();
-  } catch {
-    return {
-      activeVehicles: 128,
-      availableVehicles: 84,
-      vehiclesInMaintenance: 12,
-      activeTrips: 36,
-      pendingTrips: 9,
-      driversOnDuty: 27,
-      fleetUtilization: 78,
-    };
-  }
+  const response = await api.get(`/dashboard/kpis${buildQueryString(filters)}`);
+  return response.data;
 };
 
-export const fetchFleetUtilizationSeries = async (filters = {}) => {
-  try {
-    const response = await fetch(`${API_BASE_URL}/dashboard/utilization${buildQueryString(filters)}`);
-    if (!response.ok) {
-      throw new Error('Unable to load utilization trend');
-    }
-    return response.json();
-  } catch {
-    return [
-      { period: 'Jan', utilization: 72 },
-      { period: 'Feb', utilization: 74 },
-      { period: 'Mar', utilization: 76 },
-      { period: 'Apr', utilization: 71 },
-      { period: 'May', utilization: 79 },
-      { period: 'Jun', utilization: 82 },
-    ];
-  }
+export const fetchDashboardTrips = async (filters = {}) => {
+  const response = await api.get(`/dashboard/trips${buildQueryString(filters)}`);
+  return response.data;
+};
+
+export const fetchVehicleStatus = async (filters = {}) => {
+  const response = await api.get(`/dashboard/vehicle-status${buildQueryString(filters)}`);
+  return response.data;
 };

@@ -1,5 +1,6 @@
+import api from './api';
+
 const TOKEN_KEY = 'transitops.token';
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000';
 
 const encodeBase64Url = (value) => {
   const encoded = btoa(unescape(encodeURIComponent(value)));
@@ -70,58 +71,25 @@ export const isTokenValid = (token) => {
 };
 
 export const loginUser = async ({ email, username, password, role }) => {
-  try {
-    const response = await fetch(`${API_BASE_URL}/auth/login`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        email: email || username,
-        username,
-        password,
-        role: role || 'Fleet Manager',
-      }),
-    });
+  const response = await api.post('/auth/login', {
+    email: email || username,
+    username,
+    password,
+    role: role || 'Fleet Manager',
+  });
 
-    const data = await response.json().catch(() => ({}));
-    if (!response.ok) {
-      throw new Error(data.error || data.message || 'Login failed');
-    }
+  const data = response.data;
+  const token = data.token || createMockJwt({ email: data.user?.email, role: data.user?.role, name: data.user?.name });
+  saveToken(token);
+  return { token, user: data.user };
+};
 
-    const token = data.token || createMockJwt({ email: data.user?.email, role: data.user?.role, name: data.user?.name });
-    saveToken(token);
-    return { token, user: data.user };
-  } catch (error) {
-    throw error;
-  }
+export const fetchCurrentUser = async () => {
+  const response = await api.get('/auth/me');
+  return response.data;
 };
 
 export const apiRequest = async (url, options = {}) => {
-  const token = getStoredToken();
-  const headers = new Headers(options.headers || {});
-
-  if (token) {
-    headers.set('Authorization', `Bearer ${token}`);
-  }
-
-  if (!headers.has('Content-Type') && options.body && !(options.body instanceof FormData)) {
-    headers.set('Content-Type', 'application/json');
-  }
-
-  const requestUrl = /^https?:\/\//.test(url) ? url : `${API_BASE_URL}${url}`;
-  const response = await fetch(requestUrl, {
-    ...options,
-    headers,
-  });
-
-  if (!response.ok) {
-    const text = await response.text();
-    throw new Error(text || `Request failed with ${response.status}`);
-  }
-
-  const contentType = response.headers.get('content-type') || '';
-  if (contentType.includes('application/json')) {
-    return response.json();
-  }
-
-  return response.text();
+  const response = await api.request({ url, ...options });
+  return response.data;
 };
