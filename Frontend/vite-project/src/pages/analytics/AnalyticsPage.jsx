@@ -2,8 +2,12 @@ import { useEffect, useState } from 'react';
 import Card from '../../components/common/Card';
 import Header from '../../components/common/Header';
 import { fetchAnalyticsKPIs, fetchFleetUtilization, fetchOperationalMetrics } from '../../services/reportService';
+import { useSettings } from '../../contexts/SettingsContext';
 
 const FleetAnalyticsPage = () => {
+  const { formatMoney } = useSettings() || {
+    formatMoney: (val) => `₦${Number(val).toLocaleString()}`
+  };
   const [kpis, setKpis] = useState(null);
   const [fleetData, setFleetData] = useState(null);
   const [operationalData, setOperationalData] = useState(null);
@@ -45,13 +49,13 @@ const FleetAnalyticsPage = () => {
           <Card>
             <div className="space-y-2">
               <p className="text-sm text-slate-500">Total Revenue</p>
-              <p className="text-3xl font-semibold text-emerald-600">₦{Number(kpis.totalRevenue).toLocaleString()}</p>
+              <p className="text-3xl font-semibold text-emerald-600">{formatMoney(kpis.totalRevenue)}</p>
             </div>
           </Card>
           <Card>
             <div className="space-y-2">
               <p className="text-sm text-slate-500">Operational Cost</p>
-              <p className="text-3xl font-semibold text-orange-600">₦{Number(kpis.operationalCost).toLocaleString()}</p>
+              <p className="text-3xl font-semibold text-orange-600">{formatMoney(kpis.operationalCost)}</p>
             </div>
           </Card>
           <Card>
@@ -75,7 +79,7 @@ const FleetAnalyticsPage = () => {
           <Card>
             <div className="space-y-2">
               <p className="text-sm text-slate-500">Maintenance Cost</p>
-              <p className="text-3xl font-semibold text-rose-600">₦{Number(kpis.maintenanceCost).toLocaleString()}</p>
+              <p className="text-3xl font-semibold text-rose-600">{formatMoney(kpis.maintenanceCost)}</p>
             </div>
           </Card>
         </div>

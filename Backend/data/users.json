@@ -1,0 +1,50 @@
+[
+  {
+    "id": "admin_1",
+    "name": "Admin",
+    "username": "admin",
+    "email": "admin@transitops.com",
+    "password_hash": "$2b$10$iadbj0SuS30P1rzjD1/6Xu21W0/iNdZZOGLzeR7oCixk9FG6U/BxK",
+    "role": "fleet_manager",
+    "status": "Active",
+    "loginAttempts": 0,
+    "lockedUntil": null,
+    "createdAt": "2026-07-14T07:51:10.552Z"
+  },
+  {
+    "id": "user_1784015563651",
+    "name": "arunesh",
+    "username": "arunesh",
+    "email": "arun2k07@gmail.com",
+    "password_hash": "$2b$10$SGNfJCB0dH1dRaT9UujaZuhpyqgG.SJ9/gesQ31DQ14ZLp/zOZt8i",
+    "role": "fleet_manager",
+    "status": "Active",
+    "loginAttempts": 0,
+    "lockedUntil": null,
+    "createdAt": "2026-07-14T07:52:43.651Z"
+  },
+  {
+    "id": "user_1784020760405",
+    "name": "jane.smith@transitops.com",
+    "username": "jane.smith@transitops.com",
+    "email": "jane.smith@transitops.com",
+    "password_hash": "$2b$10$0QxHqAb1L3L6ErCbuQaz4eR3HoiWfMwTpENaSJdIyWpoavKE6VCPa",
+    "role": "driver",
+    "status": "Active",
+    "loginAttempts": 0,
+    "lockedUntil": null,
+    "createdAt": "2026-07-14T09:19:20.405Z"
+  },
+  {
+    "id": "user_1784020934873",
+    "name": "john.doe@transitops.com",
+    "username": "john.doe@transitops.com",
+    "email": "john.doe@transitops.com",
+    "password_hash": "$2b$10$v.B19vrNgmwXefeTY4etleQAkbc8JUjxhUnr1jKdOiT5Lq0MKekPq",
+    "role": "driver",
+    "status": "Active",
+    "loginAttempts": 0,
+    "lockedUntil": null,
+    "createdAt": "2026-07-14T09:22:14.873Z"
+  }
+]

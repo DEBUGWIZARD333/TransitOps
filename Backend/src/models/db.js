@@ -1,0 +1,181 @@
+const vehicles = [
+  {
+    id: 1,
+    registrationNumber: 'TR-001',
+    vehicleName: 'Metro Bus 01',
+    vehicleType: 'Bus',
+    maxCapacity: 48,
+    odometer: 124500,
+    acquisitionCost: 180000,
+    status: 'Available',
+  },
+  {
+    id: 2,
+    registrationNumber: 'TR-002',
+    vehicleName: 'City Shuttle 02',
+    vehicleType: 'Van',
+    maxCapacity: 12,
+    odometer: 87420,
+    acquisitionCost: 65000,
+    status: 'On Trip',
+  },
+  {
+    id: 3,
+    registrationNumber: 'TR-003',
+    vehicleName: 'Express Truck 03',
+    vehicleType: 'Truck',
+    maxCapacity: 24,
+    odometer: 158200,
+    acquisitionCost: 120000,
+    status: 'In Shop',
+  },
+  {
+    id: 4,
+    registrationNumber: 'TR-004',
+    vehicleName: 'Regional Coach 04',
+    vehicleType: 'Bus',
+    maxCapacity: 54,
+    odometer: 221000,
+    acquisitionCost: 240000,
+    status: 'Retired',
+  },
+];
+
+const drivers = [
+  {
+    id: 1,
+    driverName: 'Amina Yusuf',
+    licenseNumber: 'DL-1201',
+    licenseCategory: 'Class A',
+    licenseExpiryDate: '2026-12-15',
+    contactNumber: '+2348080010001',
+    tripCompletionPercentage: 92,
+    safetyScore: 96,
+    status: 'Available',
+  },
+  {
+    id: 2,
+    driverName: 'Bola Hassan',
+    licenseNumber: 'DL-1202',
+    licenseCategory: 'Class B',
+    licenseExpiryDate: '2025-08-01',
+    contactNumber: '+2348080010002',
+    tripCompletionPercentage: 78,
+    safetyScore: 88,
+    status: 'On Trip',
+  },
+  {
+    id: 3,
+    driverName: 'Chidi Okafor',
+    licenseNumber: 'DL-1203',
+    licenseCategory: 'Class C',
+    licenseExpiryDate: '2026-03-20',
+    contactNumber: '+2348080010003',
+    tripCompletionPercentage: 65,
+    safetyScore: 74,
+    status: 'Suspended',
+  },
+];
+
+const trips = [
+  {
+    id: 1,
+    tripNumber: 'TR-2024-001',
+    source: 'Lagos Central',
+    destination: 'Ibadan Hub',
+    cargoWeight: 1200,
+    plannedDistance: 125,
+    assignedVehicle: 'TR-001',
+    assignedDriver: 'DL-1201',
+    dispatchStatus: 'Completed',
+    createdAt: '2024-01-15',
+  },
+  {
+    id: 2,
+    tripNumber: 'TR-2024-002',
+    source: 'Ibadan Hub',
+    destination: 'Oyo Terminal',
+    cargoWeight: 800,
+    plannedDistance: 85,
+    assignedVehicle: 'TR-002',
+    assignedDriver: 'DL-1202',
+    dispatchStatus: 'In Progress',
+    createdAt: '2024-01-20',
+  },
+  {
+    id: 3,
+    tripNumber: 'TR-2024-003',
+    source: 'Oyo Terminal',
+    destination: 'Lagos Central',
+    cargoWeight: 1500,
+    plannedDistance: 110,
+    assignedVehicle: null,
+    assignedDriver: null,
+    dispatchStatus: 'Pending',
+    createdAt: '2024-01-22',
+  },
+];
+
+const maintenanceRecords = [
+  {
+    id: 1,
+    vehicleId: 'TR-001',
+    serviceType: 'Oil Change',
+    serviceCost: 5000,
+    serviceDate: '2024-01-10',
+    maintenanceStatus: 'Completed',
+    notes: 'Regular maintenance',
+  },
+  {
+    id: 2,
+    vehicleId: 'TR-003',
+    serviceType: 'Engine Repair',
+    serviceCost: 45000,
+    serviceDate: '2024-01-15',
+    maintenanceStatus: 'In Progress',
+    notes: 'Engine malfunction repair',
+  },
+];
+
+const expenses = [
+  {
+    id: 1,
+    expenseType: 'Fuel',
+    amount: 12500,
+    vehicleId: 'TR-001',
+    date: '2024-01-20',
+    description: 'Fuel purchase - 80L @ N156/L',
+  },
+  {
+    id: 2,
+    expenseType: 'Maintenance',
+    amount: 5000,
+    vehicleId: 'TR-002',
+    date: '2024-01-18',
+    description: 'Oil change and filter replacement',
+  },
+  {
+    id: 3,
+    expenseType: 'Toll',
+    amount: 2000,
+    vehicleId: 'TR-003',
+    date: '2024-01-19',
+    description: 'Toll charges - Lagos-Ibadan',
+  },
+];
+
+const settings = {
+  companyName: 'TransitOps',
+  timezone: 'Africa/Lagos',
+  dateFormat: 'DD/MM/YYYY',
+  currency: 'NGN',
+};
+
+module.exports = {
+  vehicles,
+  drivers,
+  trips,
+  maintenanceRecords,
+  expenses,
+  settings,
+};

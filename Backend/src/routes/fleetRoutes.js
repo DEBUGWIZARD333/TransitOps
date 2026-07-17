@@ -1,48 +1,6 @@
 const express = require('express');
 const router = express.Router();
-
-const vehicles = [
-  {
-    id: 1,
-    registrationNumber: 'TR-001',
-    vehicleName: 'Metro Bus 01',
-    vehicleType: 'Bus',
-    maxCapacity: 48,
-    odometer: 124500,
-    acquisitionCost: 180000,
-    status: 'Available',
-  },
-  {
-    id: 2,
-    registrationNumber: 'TR-002',
-    vehicleName: 'City Shuttle 02',
-    vehicleType: 'Van',
-    maxCapacity: 12,
-    odometer: 87420,
-    acquisitionCost: 65000,
-    status: 'On Trip',
-  },
-  {
-    id: 3,
-    registrationNumber: 'TR-003',
-    vehicleName: 'Express Truck 03',
-    vehicleType: 'Truck',
-    maxCapacity: 24,
-    odometer: 158200,
-    acquisitionCost: 120000,
-    status: 'In Shop',
-  },
-  {
-    id: 4,
-    registrationNumber: 'TR-004',
-    vehicleName: 'Regional Coach 04',
-    vehicleType: 'Bus',
-    maxCapacity: 54,
-    odometer: 221000,
-    acquisitionCost: 240000,
-    status: 'Retired',
-  },
-];
+const { vehicles } = require('../models/db');
 
 router.get('/vehicles', (req, res) => {
   const { search = '', status = '', vehicleType = '' } = req.query;

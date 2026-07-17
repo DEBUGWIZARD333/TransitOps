@@ -1,5 +1,6 @@
 const express = require('express');
 const router = express.Router();
+const db = require('../models/db');
 
 router.get('/role-permissions', (req, res) => {
   res.json({
@@ -47,16 +48,12 @@ router.get('/role-permissions', (req, res) => {
 });
 
 router.get('/', (req, res) => {
-  res.json({
-    companyName: 'TransitOps',
-    timezone: 'Africa/Lagos',
-    dateFormat: 'DD/MM/YYYY',
-    currency: 'NGN',
-  });
+  res.json(db.settings);
 });
 
 router.put('/', (req, res) => {
-  res.json({ message: 'Settings updated successfully' });
+  Object.assign(db.settings, req.body);
+  res.json({ message: 'Settings updated successfully', settings: db.settings });
 });
 
 module.exports = router;

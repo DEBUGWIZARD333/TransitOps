@@ -34,6 +34,7 @@ app.use('/trips', tripRoutes);
 app.use('/maintenance', maintenanceRoutes);
 app.use('/expenses', expenseRoutes);
 app.use('/reports', reportRoutes);
+app.use('/analytics', reportRoutes);
 app.use('/settings', settingsRoutes);
 
 app.listen(port, () => {

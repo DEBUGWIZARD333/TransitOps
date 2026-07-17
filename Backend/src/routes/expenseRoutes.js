@@ -1,32 +1,6 @@
 const express = require('express');
 const router = express.Router();
-
-const expenses = [
-  {
-    id: 1,
-    expenseType: 'Fuel',
-    amount: 12500,
-    vehicleId: 'TR-001',
-    date: '2024-01-20',
-    description: 'Fuel purchase - 80L @ N156/L',
-  },
-  {
-    id: 2,
-    expenseType: 'Maintenance',
-    amount: 5000,
-    vehicleId: 'TR-002',
-    date: '2024-01-18',
-    description: 'Oil change and filter replacement',
-  },
-  {
-    id: 3,
-    expenseType: 'Toll',
-    amount: 2000,
-    vehicleId: 'TR-003',
-    date: '2024-01-19',
-    description: 'Toll charges - Lagos-Ibadan',
-  },
-];
+const { expenses } = require('../models/db');
 
 router.get('/', (req, res) => {
   const { search = '', type = '' } = req.query;

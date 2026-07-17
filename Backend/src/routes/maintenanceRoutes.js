@@ -1,26 +1,6 @@
 const express = require('express');
 const router = express.Router();
-
-const maintenanceRecords = [
-  {
-    id: 1,
-    vehicleId: 'TR-001',
-    serviceType: 'Oil Change',
-    serviceCost: 5000,
-    serviceDate: '2024-01-10',
-    maintenanceStatus: 'Completed',
-    notes: 'Regular maintenance',
-  },
-  {
-    id: 2,
-    vehicleId: 'TR-003',
-    serviceType: 'Engine Repair',
-    serviceCost: 45000,
-    serviceDate: '2024-01-15',
-    maintenanceStatus: 'In Progress',
-    notes: 'Engine malfunction repair',
-  },
-];
+const { maintenanceRecords } = require('../models/db');
 
 router.get('/', (req, res) => {
   const { search = '', status = '' } = req.query;

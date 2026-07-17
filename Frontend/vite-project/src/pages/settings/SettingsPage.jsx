@@ -2,8 +2,10 @@ import { useEffect, useState } from 'react';
 import Card from '../../components/common/Card';
 import Header from '../../components/common/Header';
 import { fetchRolePermissions, fetchSettings, updateSettings } from '../../services/settingsService';
+import { useSettings } from '../../contexts/SettingsContext';
 
 const SettingsPage = () => {
+  const { refreshSettings } = useSettings() || {};
   const [settings, setSettings] = useState(null);
   const [permissions, setPermissions] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -36,6 +38,9 @@ const SettingsPage = () => {
     setIsSaving(true);
     try {
       await updateSettings(form);
+      if (refreshSettings) {
+        await refreshSettings();
+      }
       setError('');
       alert('Settings saved successfully');
     } catch (err) {

@@ -96,14 +96,7 @@ const SignupPage = () => {
         </div>
 
         <div className="rounded-[28px] border border-slate-200 bg-white p-6 shadow-2xl shadow-slate-900/10 sm:p-8">
-          <div className="mb-6 rounded-2xl border border-slate-200 bg-slate-50 p-4">
-            <div className="mb-3 text-sm font-semibold uppercase tracking-[0.25em] text-slate-500">Available roles</div>
-            <ul className="grid gap-2 text-sm text-slate-600 sm:grid-cols-2">
-              {roles.map((role) => (
-                <li key={role} className="rounded-2xl bg-white px-3 py-2 shadow-sm">{role}</li>
-              ))}
-            </ul>
-          </div>
+
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="grid gap-4 md:grid-cols-2">

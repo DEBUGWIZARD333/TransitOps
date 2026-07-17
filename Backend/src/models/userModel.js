@@ -1,7 +1,38 @@
-const bcrypt = require('bcrypt');
+const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
+const fs = require('fs');
+const path = require('path');
 
-const usersTable = [];
+const dataDir = path.join(__dirname, '..', '..', 'data');
+const usersFilePath = path.join(dataDir, 'users.json');
+
+// Ensure data directory exists
+if (!fs.existsSync(dataDir)) {
+  fs.mkdirSync(dataDir, { recursive: true });
+}
+
+let usersTable = [];
+
+function loadUsers() {
+  if (fs.existsSync(usersFilePath)) {
+    try {
+      const data = fs.readFileSync(usersFilePath, 'utf8');
+      usersTable = JSON.parse(data);
+    } catch (err) {
+      console.error('Error loading users.json', err);
+      usersTable = [];
+    }
+  } else {
+    usersTable = [];
+  }
+}
+
+function saveUsers() {
+  fs.writeFileSync(usersFilePath, JSON.stringify(usersTable, null, 2));
+}
+
+// Initial load
+loadUsers();
 
 const VALID_ROLES = ['fleet_manager', 'dispatcher', 'driver', 'safety_officer', 'financial_analyst'];
 
@@ -65,6 +96,7 @@ async function seedDefaultAdmin() {
     lockedUntil: null,
     createdAt: new Date().toISOString(),
   });
+  saveUsers();
 }
 
 async function signupUser({ name, email, username, password, role }) {
@@ -92,7 +124,7 @@ async function signupUser({ name, email, username, password, role }) {
 
   const passwordHash = await bcrypt.hash(password, 10);
   const user = {
-    id: `user_${usersTable.length + 1}`,
+    id: `user_${Date.now()}`,
     name: normalizedUsername,
     username: normalizedUsername,
     email: normalizedEmail,
@@ -105,6 +137,7 @@ async function signupUser({ name, email, username, password, role }) {
   };
 
   usersTable.push(user);
+  saveUsers();
 
   return {
     user: {
@@ -146,6 +179,7 @@ async function loginUser({ email, username, password }) {
       user.lockedUntil = new Date(Date.now() + 15 * 60 * 1000).toISOString();
       user.status = 'Locked';
     }
+    saveUsers();
     const error = new Error(user.loginAttempts >= 5 ? 'Account locked after 5 failed login attempts.' : 'Invalid email or password.');
     error.statusCode = user.loginAttempts >= 5 ? 423 : 401;
     throw error;
@@ -154,6 +188,7 @@ async function loginUser({ email, username, password }) {
   user.loginAttempts = 0;
   user.lockedUntil = null;
   user.status = 'Active';
+  saveUsers();
 
   const token = jwt.sign({ sub: user.id, email: user.email, role: user.role, name: user.name }, process.env.JWT_SECRET || 'dev-secret', { expiresIn: '8h' });
 
